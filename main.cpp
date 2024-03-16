@@ -9,5 +9,5 @@ int main () {
     IntrinsicSolver intrinsic_solver = IntrinsicSolver(PATTERN, CHESS_SQUARE, IMAGE_SIZE);
 
     intrinsic_solver.calibrate("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\calibrated_txt",
-                               "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\K1.txt");
+                               "C:\\Users\\Humperdink2\\Documents\\github\\StereoVisionDepthMap\\K2.txt");
 }
