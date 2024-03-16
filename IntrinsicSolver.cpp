@@ -195,5 +195,10 @@ int IntrinsicSolver::calibrate(std::string calibration_txt_dir) {
     std::cout << "Errors" << std::endl;
     std::cout << errors << std::endl;
 
+    // Write matrices to file
+    std::ofstream fout("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\cam_matrix");
+    fout << cam_matrix << std::endl;
+    fout.close();
+
     return 0;
 }
