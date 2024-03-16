@@ -23,7 +23,7 @@ public:
     static void find_pattern_sizes_in_directory(std::string filepath);
     static void check_image(std::string filepath, int row_count, int col_count);
     void manual_annotate(std::string image_dir_path, std::string output_txt_path);
-    int calibrate(std::string pixel_coords_output_txt);
+    int calibrate(std::string pixel_coords_output_txt, std::string output_matrix_path);
 
 private:
     // Private Methods
