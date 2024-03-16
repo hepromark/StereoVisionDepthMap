@@ -151,7 +151,7 @@ void IntrinsicSolver::get_2d_3d_coords(std::string txtdir,
     }
 }
 
-int IntrinsicSolver::calibrate(std::string calibration_txt_dir) {
+int IntrinsicSolver::calibrate(std::string calibration_txt_dir, std::string matrix_output_path) {
     // Get input matrices
     std::vector<std::vector<cv::Point3f>> world_coords;
     std::vector<std::vector<cv::Point2f>> corner_pixel_coords;
@@ -196,7 +196,7 @@ int IntrinsicSolver::calibrate(std::string calibration_txt_dir) {
     std::cout << errors << std::endl;
 
     // Write matrices to file
-    std::ofstream fout("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\cam_matrix");
+    std::ofstream fout(matrix_output_path);
     fout << cam_matrix << std::endl;
     fout.close();
 
