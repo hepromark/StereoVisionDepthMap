@@ -47,14 +47,3 @@ std::vector<cv::Point> getPoints(cv::Mat image, const int NUM_POINTS) {
     return points;
 }
 
-int main() {
-
-    // Load an image
-    cv::Mat image = cv::imread("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\calib_radial.jpg",
-                         cv::IMREAD_GRAYSCALE);
-    const int num_points = 3;
-    std::vector<cv::Point> user_points = getPoints(image, num_points);
-    std::cout << "Selected points: " << user_points;
-    return 0;
-}
-
