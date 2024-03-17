@@ -33,7 +33,7 @@ private:
     std::vector<cv::Point> left_points, right_points;
 
     void take_photos();
-
+    void read_intrinsics(cv::Mat camera_matrix, cv::Mat distortion_coefficients, std::string path);
 
 };
 

@@ -13,72 +13,60 @@
 //std::vector<cv::Mat>
 
 StereoMeasurement::StereoMeasurement() {
+//    std::ifstream fin("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K1.txt");
+//
+//    left_cam_intrinsics = cv::Mat(3,3,CV_64FC1);
+//    left_cam_distortion = cv::Mat(5, 1, CV_64FC1);
+//
+//    if(!fin){
+//        std::cout << "Unable to open files";
+//        return;
+//    }
+//
+//    for(int i = 0; i < 3; i++){
+//        for(int j = 0; j < 3; j++) {
+//            double in;
+//            fin >> in;
+//            left_cam_intrinsics.at<double>(i, j) = in;
+//        }
+//    }
+//
+//    for(int i = 0; i < 5; i++) {
+//        fin >> left_cam_distortion.at<double>(i,0);
+//    }
+//
+//    fin.close();
+//
+//
 
 
-    //Read in camera intrinsic parameters (including distortion)
-    std::ifstream fin("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K1.txt");
-
-    if(!fin) {
-        std::cout << "Could not open file to read intrinsics";
-    }
+    read_intrinsics(left_cam_intrinsics,left_cam_distortion,
+                    "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K1.txt");
 
 
-    //Reading intrinsic parameters
-    std::vector<std::vector<double>> data;
-    std::string line;
 
-    //Get 1 line at a time
-    while (std::getline(fin, line)) {
-        std::vector<double> row;
-        std::string value;
-        for (char c : line) {
-
-            //Skip opening brackets
-            if (c == '(' || c == '[') {
-                continue;
-            } else if (c == ',' || c == ';' || c == ')' || c == ']') {
-                if (!value.empty()) {
-                    row.push_back(std::stod(value));
-                    value.clear();
-                }
-            } else {
-                value.push_back(c);
-            }
-        }
-        if (!row.empty()) {
-            data.push_back(row);
-        }
-    }
-
-    // Convert parsed values into matrix
-    left_cam_intrinsics = cv::Mat(data.size(), data[0].size(), CV_64F);
-    for (int i = 0; i < left_cam_intrinsics.rows; ++i) {
-        for (int j = 0; j < left_cam_intrinsics.cols; ++j) {
-            left_cam_intrinsics.at<double>(i, j) = data[i][j];
-        }
-    }
-
-    std::cout<<left_cam_intrinsics;
+    read_intrinsics(right_cam_intrinsics,right_cam_distortion,
+                    "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K2.txt");
 
 }
 
 
 void StereoMeasurement::start() {
 
-    //Take photos and undistort
-    take_photos();
-    left_image_undistorted = Distortion::correct_distortion
-            (left_image_distorted,left_cam_intrinsics, left_cam_distortion);
-    right_image_undistorted = Distortion::correct_distortion(
-            right_image_distorted, right_cam_intrinsics, right_cam_distortion);
-
-    //Get user to select points
-    left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
-    right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
-
-    cv::imshow("Left image", left_image_distorted);
-    cv::imshow("Right image", right_image_distorted);
-    while(cv::waitKey(1) != 'q'){}
+//    //Take photos and undistort
+//    take_photos();
+//    left_image_undistorted = Distortion::correct_distortion
+//            (left_image_distorted,left_cam_intrinsics, left_cam_distortion);
+//    right_image_undistorted = Distortion::correct_distortion(
+//            right_image_distorted, right_cam_intrinsics, right_cam_distortion);
+//
+//    //Get user to select points
+//    left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
+//    right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
+//
+//    cv::imshow("Left image", left_image_distorted);
+//    cv::imshow("Right image", right_image_distorted);
+//    while(cv::waitKey(1) != 'q'){}
 
 
     //Take photos
@@ -87,9 +75,35 @@ void StereoMeasurement::start() {
     //Pass matching points to 3D coordinate finder x2
     //Pass real world points to 3D distance solver
 
+}
 
+void StereoMeasurement::read_intrinsics(cv::Mat camera_matrix, cv::Mat distortion_coefficients, std::string path){
+    std::ifstream fin(path);
 
+    camera_matrix = cv::Mat(3,3,CV_64FC1);
+    distortion_coefficients = cv::Mat(5,1,CV_64FC1);
 
+    if(!fin){
+        std::cout << "Unable to open file";
+        return;
+    }
+
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++) {
+            double in;
+            fin >> in;
+            camera_matrix.at<double>(i, j) = in;
+        }
+    }
+
+    for(int i = 0; i < 5; i++) {
+        fin >> distortion_coefficients.at<double>(i,0);
+    }
+
+    std::cout << "Left intrinsics: " << camera_matrix << std::endl <<
+              "Left distortion" << distortion_coefficients << std::endl;
+
+    fin.close();
 }
 
 
