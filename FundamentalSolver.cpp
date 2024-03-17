@@ -105,13 +105,13 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
     return T;
 }
 
-cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts) {
+void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts, std::string output_txt_path) {
     std::vector<cv::Point2f> points1 = read_corners_from_txt(cam1_pts);
     std::vector<cv::Point2f> points2 = read_corners_from_txt(cam2_pts);
 
     // Normalize points and get T
-//    cv::Mat T1 = normalize_points(points1);
-//    cv::Mat T2 = normalize_points(points2);
+    cv::Mat T1 = normalize_points(points1);
+    cv::Mat T2 = normalize_points(points2);
 
     // Algorithm requires at least 8 points
     const int num_points = points1.size();
@@ -128,14 +128,14 @@ cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string ca
         // Every row is has:
         // p1x * p2x, p2y * p1x, p1x, p2x * p1y, p1y * p2y, p1y, p2x, p2y, 1
         std::vector<double> W_i = {points1[row].x * points2[row].x,
-                                points2[row].y * points1[row].x,
-                                points1[row].x,
-                                points2[row].x * points1[row].y,
-                                points1[row].y * points2[row].y,
-                                points1[row].y,
-                                points2[row].x,
-                                points2[row].y,
-                                1};
+                                   points2[row].y * points1[row].x,
+                                   points1[row].x,
+                                   points2[row].x * points1[row].y,
+                                   points1[row].y * points2[row].y,
+                                   points1[row].y,
+                                   points2[row].x,
+                                   points2[row].y,
+                                   1};
         W.push_back(W_i);
     }
     // Convert the 2D vector to cv::Mat
@@ -146,42 +146,44 @@ cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string ca
         }
     }
 
-    std::cout << mat.size() << std::endl;
-    std::cout << mat << std::endl;
-
+    // First SVD Decomp
     cv::Mat U, diag_S, Vt;
     cv::SVDecomp(mat, diag_S, U, Vt, cv::SVD::FULL_UV);  // makes the u and Vt square matrices
     cv::Mat S = cv::Mat::diag(diag_S);
-
-    std::cout << "============" << std::endl;
-    std::cout << U << std::endl;
-    std::cout << U.size() << std::endl;
-    std::cout << "============" << std::endl;
-    std::cout << S << std::endl;
-    std::cout << S.size() << std::endl;
-    std::cout << "============" << std::endl;
-    std::cout << Vt << std::endl;
-    std::cout << Vt.size() << std::endl;
-    std::cout << "============" << std::endl;
 
     // F_hat is the smallest singular value vector, last column in V
     cv::Mat F_hat = Vt.row(Vt.rows - 1);
 
     // Turn the vector F_hat into (3x3) matrix F
-    cv::Mat F = F_hat.reshape(1, 3);
-    F.convertTo(F, CV_64F);
+    F_hat = F_hat.reshape(1, 3);
+    F_hat.convertTo(F_hat, CV_64F);
+
+    // Do SVD again to get a rank 2 matrix
+    cv::Mat U2, diag_S2, Vt2;
+    cv::SVDecomp(F_hat, diag_S2, U2, Vt2, cv::SVD::FULL_UV);  // makes the u and Vt square matrices
+
+    // Construct rank 2 F
+    cv::Mat S2 = cv::Mat::zeros(3, 3, CV_64F);
+    S2.at<double>(0, 0) = diag_S2.at<double>(0);
+    S2.at<double>(1, 1) = diag_S2.at<double>(1);
+
+    cv::Mat F = U2 * S2 * Vt2;
 
     // Remove the previous transform
-//    std::cout << T2.t().size() << std::endl;
-//    std::cout << F.size() << std::endl;
-//    std::cout << T1.size() << std::endl;
+    F = T2.t() * F * T1;
 
-
-//    F = T2.t() * F * T1;
-
+    // Output to file
+    std::cout << "============" << std::endl;
+    std::cout << "F" << std::endl;
     std::cout << F << std::endl;
     std::cout << F.size() << std::endl;
     std::cout << "============" << std::endl;
 
-    return F;
+    std::ofstream fout(output_txt_path);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            fout << F.at<double>(i, j) << " ";
+        }
+        fout << std::endl;
+    }
 }

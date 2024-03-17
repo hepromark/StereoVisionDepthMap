@@ -100,19 +100,6 @@ void IntrinsicSolver::IntrinsicSolver::manual_annotate(std::string image_dir_pat
     }
 }
 
-std::vector<cv::Point2f> read_corners_from_txt(std::string filepath) {
-    std::ifstream fin(filepath);
-    int x = 0;
-    int y = 0;
-    std::vector<cv::Point2f> output;
-    while (fin >> x) {
-        fin >> y;
-        output.push_back(cv::Point2i(x, y));
-    }
-
-    return output;
-}
-
 std::vector<cv::Point2f> IntrinsicSolver::read_corners_from_txt(std::string filepath) {
     std::ifstream fin(filepath);
     int x = 0;
