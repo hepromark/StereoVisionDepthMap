@@ -184,7 +184,17 @@ int IntrinsicSolver::calibrate(std::string calibration_txt_dir, std::string matr
 
     // Write matrices to file
     std::ofstream fout(matrix_output_path);
-    fout << cam_matrix << std::endl;
+    for (int i =0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j)
+            fout << cam_matrix.at<double>(i,j) << " ";
+        fout << std::endl;
+    }
+
+    fout << std::endl;
+
+    for (int i =0; i < 5; ++i) {
+        fout << dist_coeff.at<double>(0,i) << " ";
+    }
     fout.close();
 
     return 0;
