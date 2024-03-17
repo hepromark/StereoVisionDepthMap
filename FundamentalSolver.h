@@ -14,7 +14,8 @@ public:
 public:
     void manual_match_points(std::string input_imgage_dir, std::string output_txt_dir);
     cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts);
-    std::vector<cv::Point2i> FundamentalSolver::read_corners_from_txt(std::string filepath);
+    std::vector<cv::Point2f> FundamentalSolver::read_corners_from_txt(std::string filepath);
+    cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points1);
 };
 
 

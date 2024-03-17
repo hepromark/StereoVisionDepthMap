@@ -1,6 +1,3 @@
-//
-// Created by markd on 2024-03-16.
-//
 
 #include "FundamentalSolver.h"
 
@@ -10,6 +7,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <string>
+#include <cmath>
 
 #include "PointSelection.h"
 
@@ -47,11 +45,11 @@ void FundamentalSolver::manual_match_points(std::string input_image_dir, std::st
     }
 }
 
-std::vector<cv::Point2i> FundamentalSolver::read_corners_from_txt(std::string filepath) {
+std::vector<cv::Point2f> FundamentalSolver::read_corners_from_txt(std::string filepath) {
     std::ifstream fin(filepath);
     int x = 0;
     int y = 0;
-    std::vector<cv::Point2i> output;
+    std::vector<cv::Point2f> output;
     while (fin >> x) {
         fin >> y;
         output.push_back(cv::Point2i(x, y));
@@ -60,9 +58,61 @@ std::vector<cv::Point2i> FundamentalSolver::read_corners_from_txt(std::string fi
     return output;
 }
 
+cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
+    // Get x and y centroids for Point 1
+    double x_centroid = 0;
+    double y_centroid = 0;
+    for (const cv::Point2f& point : points) {
+        x_centroid += point.x;
+        y_centroid += point.y;
+    }
+    x_centroid /= points.size();
+    y_centroid /= points.size();
+    std::cout << "Centroid: " << x_centroid << " " << y_centroid << std::endl;
+
+    // Translate points
+    for (cv::Point2f& point : points) {
+        point.x -= x_centroid;
+        point.y -= y_centroid;
+    }
+    std::cout << "Translated: " << points << std::endl;
+
+    // Get scaling factor s
+    double total_dist = 0;
+    for (cv::Point2f& point : points) {
+        total_dist += std::pow(point.x, 2) + std::pow(point.y, 2);
+    }
+    std::cout << total_dist << std::endl;
+    total_dist = std::pow(total_dist, 0.5);
+    std::cout << total_dist << std::endl;
+
+    double scale_factor = total_dist / points.size() * std::pow(2, 0.5);
+    std::cout << scale_factor << std::endl;
+
+    // Scale points array
+    for (cv::Point2f& point : points) {
+        point *= scale_factor;
+    }
+
+    // Output transform matrix T
+    cv::Mat T = cv::Mat::zeros(3, 3, CV_64F);
+    std::cout << T << std::endl;
+    T.at<double>(0, 0) = scale_factor;
+    T.at<double>(1, 1) = scale_factor;
+    T.at<double>(0, 2) = -1 * scale_factor * x_centroid;
+    T.at<double>(1, 2) = -1 * scale_factor * y_centroid;
+    T.at<double>(2, 2) = 1;
+
+    std::cout << T << std::endl;
+    return T;
+}
+
 cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts) {
-    std::vector<cv::Point2i> points1 = read_corners_from_txt(cam1_pts);
-    std::vector<cv::Point2i> points2 = read_corners_from_txt(cam2_pts);
+    std::vector<cv::Point2f> points1 = read_corners_from_txt(cam1_pts);
+    std::vector<cv::Point2f> points2 = read_corners_from_txt(cam2_pts);
+
+    // Normalize points and get T
+    cv::Mat T1 =
 
     // Algorithm requires at least 8 points
     const int num_points = points1.size();
@@ -73,17 +123,18 @@ cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string ca
 
     // points1 and points2 have shape m x 2
     // Resulting W matrix has m columns (m >= 8)
-    std::vector<std::vector<int>> W;
+    std::vector<std::vector<double>> W;
 
     for (int row = 0; row < num_points; row++) {
         // Every row is has:
         // p1x * p2x, p2y * p1x, p1x, p2x * p1y, p1y * p2y, p1y, p2x, p2y, 1
-        std::vector<int> W_i = {points1[row].x * points2[row].x,
+        std::vector<double> W_i = {points1[row].x * points2[row].x,
                                 points2[row].y * points1[row].x,
                                 points1[row].x,
                                 points2[row].x * points1[row].y,
                                 points1[row].y * points2[row].y,
                                 points1[row].y,
+                                points2[row].x,
                                 points2[row].y,
                                 1};
         W.push_back(W_i);
@@ -117,9 +168,12 @@ cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string ca
     // F_hat is the smallest singular value vector, last column in V
     cv::Mat F_hat = Vt.row(Vt.rows - 1);
 
-    std::cout << F_hat << std::endl;
-    std::cout << F_hat.size() << std::endl;
+    // Turn the vector F_hat into (3x3) matrix F
+    cv::Mat F = F_hat.reshape(1, 3);
+
+    std::cout << F << std::endl;
+    std::cout << F.size() << std::endl;
     std::cout << "============" << std::endl;
 
-    return F_hat;
+    return F;
 }
