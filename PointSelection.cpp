@@ -1,10 +1,15 @@
+//
+// Created by Humperdink2 on 2024-03-16.
+//
 #include <opencv2/core/core.hpp>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/types.hpp>
 
+#include "PointSelection.h"
+
 // Mouse callback function - called anytime mouse input detected
-void mouse_handler(int event, int x, int y, int flags, void* pointData) {
+void PointSelection::mouse_handler(int event, int x, int y, int flags, void* pointData) {
 
     if (event == cv::EVENT_LBUTTONDOWN) {
         //Access point data by casting generic reference into specific type
@@ -22,7 +27,7 @@ void mouse_handler(int event, int x, int y, int flags, void* pointData) {
  * @param NUM_POINTS Number of points user will select.
  * @return Vector of points selected by user, or vector containing ((-1,-1)) if image cannot be loaded.
  */
-std::vector<cv::Point> getPoints(cv::Mat image, const int NUM_POINTS) {
+std::vector<cv::Point> PointSelection::getPoints(cv::Mat image, const int NUM_POINTS) {
 
     //check if image is empty, return null pointer if it is
     if(image.empty()) {
@@ -36,7 +41,7 @@ std::vector<cv::Point> getPoints(cv::Mat image, const int NUM_POINTS) {
     cv::namedWindow("Select Points");
 
     // Set mouse callback function
-    cv::setMouseCallback("Select Points", mouse_handler, &points);
+    cv::setMouseCallback("Select Points", PointSelection::mouse_handler, &points);
 
     // Display the image
     imshow("Select Points", image);
@@ -46,4 +51,3 @@ std::vector<cv::Point> getPoints(cv::Mat image, const int NUM_POINTS) {
 
     return points;
 }
-
