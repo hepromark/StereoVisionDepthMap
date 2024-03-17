@@ -5,10 +5,65 @@
 #include "FundamentalSolver.h"
 
 #include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <string>
+
+#include "PointSelection.h"
 
 FundamentalSolver::FundamentalSolver() {}
 
-cv::Mat FundamentalSolver::calc_Fundamental(const std::vector<cv::Point2i> &points1, const std::vector<cv::Point2i> &points2) {
+void FundamentalSolver::manual_match_points(std::string input_image_dir, std::string output_txt_dir) {
+    std::filesystem::path directory = input_image_dir;
+    for (const auto& image : std::filesystem::directory_iterator(directory)) {
+        std::string raw_filename = image.path().string();
+        std::string filename = raw_filename.substr(input_image_dir.size() + 1, raw_filename.size() - 4);
+        std::cout << "file: " << filename << std::endl;
+
+        // Check file ok
+        if (!std::filesystem::is_regular_file(image.path())) {
+            std::cout << "Couldnt open file?" << std::endl;
+            return;
+        }
+
+        std::ofstream fout(output_txt_dir + "\\" + filename + ".txt");
+
+        // Load an image
+        cv::Mat img = cv::imread(
+                raw_filename,
+                cv::IMREAD_GRAYSCALE);
+
+        const int num_points = 8;
+        std::vector<cv::Point> user_points = PointSelection::getPoints(img, num_points);
+
+        for (auto point : user_points) {
+            fout << point.x << " " << point.y << std::endl;
+            std::cout << point << std::endl;
+        }
+        std::cout << output_txt_dir + "\\" + filename + ".txt" << std::endl;
+        fout.close();
+    }
+}
+
+std::vector<cv::Point2i> FundamentalSolver::read_corners_from_txt(std::string filepath) {
+    std::ifstream fin(filepath);
+    int x = 0;
+    int y = 0;
+    std::vector<cv::Point2i> output;
+    while (fin >> x) {
+        fin >> y;
+        output.push_back(cv::Point2i(x, y));
+    }
+
+    return output;
+}
+
+cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts) {
+    std::vector<cv::Point2i> points1 = read_corners_from_txt(cam1_pts);
+    std::vector<cv::Point2i> points2 = read_corners_from_txt(cam2_pts);
+
     // Algorithm requires at least 8 points
     const int num_points = points1.size();
     if (points1.size() != points2.size() || num_points < 8) {
