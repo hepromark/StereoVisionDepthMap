@@ -14,7 +14,7 @@ cv::Mat calc_P(const cv::Mat &fund1, const cv::Mat& fund2, std::vector<cv::Point
     cv::Mat system = (points[0].x * fund1.row(2).t() - fund1.row(0).t()).t();
     system.push_back((points[0].y * fund1.row(2).t() - fund1.row(1).t()).t());
     system.push_back((points[1].x * fund2.row(2).t() - fund2.row(0).t()).t());
-    system.push_back((points[1].y * fund2.row(2).t() - fund2.row(0).t()).t());
+    system.push_back((points[1].y * fund2.row(2).t() - fund2.row(1).t()).t());
 
     cv::Mat output = cv::Mat();
 
