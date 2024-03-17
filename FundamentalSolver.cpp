@@ -82,12 +82,11 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
     for (cv::Point2f& point : points) {
         total_dist += std::pow(point.x, 2) + std::pow(point.y, 2);
     }
-    std::cout << total_dist << std::endl;
     total_dist = std::pow(total_dist, 0.5);
-    std::cout << total_dist << std::endl;
+    std::cout << "Total Distance: " << total_dist << std::endl;
 
     double scale_factor = total_dist / points.size() * std::pow(2, 0.5);
-    std::cout << scale_factor << std::endl;
+    std::cout << "Scale factor: " << scale_factor << std::endl;
 
     // Scale points array
     for (cv::Point2f& point : points) {
@@ -96,7 +95,6 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
 
     // Output transform matrix T
     cv::Mat T = cv::Mat::zeros(3, 3, CV_64F);
-    std::cout << T << std::endl;
     T.at<double>(0, 0) = scale_factor;
     T.at<double>(1, 1) = scale_factor;
     T.at<double>(0, 2) = -1 * scale_factor * x_centroid;
@@ -112,7 +110,8 @@ cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string ca
     std::vector<cv::Point2f> points2 = read_corners_from_txt(cam2_pts);
 
     // Normalize points and get T
-    cv::Mat T1 =
+//    cv::Mat T1 = normalize_points(points1);
+//    cv::Mat T2 = normalize_points(points2);
 
     // Algorithm requires at least 8 points
     const int num_points = points1.size();
@@ -170,6 +169,15 @@ cv::Mat FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string ca
 
     // Turn the vector F_hat into (3x3) matrix F
     cv::Mat F = F_hat.reshape(1, 3);
+    F.convertTo(F, CV_64F);
+
+    // Remove the previous transform
+//    std::cout << T2.t().size() << std::endl;
+//    std::cout << F.size() << std::endl;
+//    std::cout << T1.size() << std::endl;
+
+
+//    F = T2.t() * F * T1;
 
     std::cout << F << std::endl;
     std::cout << F.size() << std::endl;
