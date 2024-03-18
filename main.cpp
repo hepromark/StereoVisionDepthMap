@@ -3,17 +3,11 @@
 //
 #include <iostream>
 #include "StereoMeasurement.h"
+#include "Distortion.h"
 
 int main() {
-    //std::cout<<"Hello world";
-
     StereoMeasurement firstMeasurement;
     firstMeasurement.start();
 
     return 0;
-
-
-
-
-
 }
