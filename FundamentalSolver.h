@@ -23,6 +23,11 @@ public:
     cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points1);
 
     void FundamentalSolver::calc_fundamental_2(std::string cam1_pts, std::string cam2_pts, std::string output_txt_dir);
+
+    static int FundamentalSolver::get_rank(const cv::Mat& mat);
+
+    static cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, std::string matrix_output_path);
+
 };
 
 
