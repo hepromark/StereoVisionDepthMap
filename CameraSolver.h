@@ -5,7 +5,9 @@
 #ifndef STEREOVISIONDEPTHMAP_CAMERASOLVER_H
 #define STEREOVISIONDEPTHMAP_CAMERASOLVER_H
 
-void solve_camera2(const cv::Mat &fund, const cv::Mat &K1, const cv::Mat &K2, cv::Mat &camera);
+cv::Mat solve_camera2(cv::Mat & fund,  cv::Mat & K1, cv::Mat & K2);
 
 int get_rank(const cv::Mat& mat);
+
+void rowReduce(cv::Mat& matrix);
 #endif //STEREOVISIONDEPTHMAP_CAMERASOLVER_H
