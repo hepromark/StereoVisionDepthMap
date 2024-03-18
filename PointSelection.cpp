@@ -8,7 +8,15 @@
 
 #include "PointSelection.h"
 
-// Mouse callback function - called anytime mouse input detected
+/**
+ * Mouse callback function - run whenever mouse is pressed
+ *
+ * @param event Specifies event caused by user (ie left button).
+ * @param x x-position of mouse (in pixels).
+ * @param y y-position of mouse (in pixels).
+ * @param flags not used here.
+ * @param pointData vector of points passed by ref used to store the points selected by user in each photo.
+ */
 void PointSelection::mouse_handler(int event, int x, int y, int flags, void* pointData) {
 
     if (event == cv::EVENT_LBUTTONDOWN) {

@@ -19,10 +19,11 @@ public:
     void StereoMeasurement::read_m_by_n(cv::Mat& output_matrix, int m, int n, std::string path);
 
 private:
-    const int LEFT_CAM_INDEX = 2;
-    const int RIGHT_CAM_INDEX = 0;
+    const int LEFT_CAM_INDEX = 0;
+    const int RIGHT_CAM_INDEX = 2;
     const int CAM_MATRIX_DIMENSION = 3;
-    const int POINTS_PER_PHOTO = 3;
+    const int POINTS_PER_PHOTO = 2;
+    const int DESIRED_WIDTH = 1920, DESIRED_HEIGHT = 1080;
 
     //Matricies to store images
     cv::Mat left_image_distorted, right_image_distorted, left_image_undistorted, right_image_undistorted;

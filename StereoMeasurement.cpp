@@ -12,6 +12,11 @@
 
 //std::vector<cv::Mat>
 
+/**
+ * Constructor - Creates an object with required members to measure distance with stereo cameras.
+ *
+ * Opens txt files and reads stored camera parameters and distortion coefficients.
+ */
 StereoMeasurement::StereoMeasurement() {
     //Get intrinsics for each camera
     read_intrinsics(left_cam_intrinsics,left_cam_distortion,
@@ -21,47 +26,48 @@ StereoMeasurement::StereoMeasurement() {
 
 }
 
-
+/**
+ * Function containing the procedure to take a distance measurement.
+ */
 void StereoMeasurement::start() {
 
     //Take photos and undistort them
     take_photos();
-    cv::imshow("Left image original", left_image_distorted);
-    cv::imshow("Right image original", right_image_distorted);
-
-//    std::cout << left_cam_intrinsics << std::endl << left_cam_distortion << std::endl;
-
-
-
     left_image_undistorted = Distortion::correct_distortion(
             left_image_distorted,left_cam_intrinsics, left_cam_distortion);
     right_image_undistorted = Distortion::correct_distortion(
             right_image_distorted, right_cam_intrinsics, right_cam_distortion);
 
-    cv::imshow("Left image corrected", left_image_undistorted);
-    cv::imshow("Right image corrected", right_image_undistorted);
 
-    while(cv::waitKey(1) != 'q'){}
-
-
-//    //Get user to select points
-//    left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
-//    right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
+    //Get user to select points in undistorted photos
+    left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
+    right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
 
 
 
+    //Pass corresponding sets of point and get corresponding 3d points
+    //Determine distance between these points
 
-    //Take photos
-    //Undistort photos
-    //Show left and right photos to user and get matching points
-    //Pass matching points to 3D coordinate finder x2
-    //Pass real world points to 3D distance solver
-
+//    cv::imshow("Left image corrected", left_image_undistorted);
+//    cv::imshow("Right image corrected", right_image_undistorted);
+//
+//    while(cv::waitKey(1) != 'q'){}
 }
 
+/**
+ * Read an m x n stored in a text file and save into a cv::Mat object.
+ *
+ * @param output_matrix Mat object passed as ref used to return the matrix stored in txt file.
+ * @param m Number of rows in matrix.
+ * @param n Number of columns in matrix.
+ * @param path Path to txt file
+ */
 void StereoMeasurement::read_m_by_n(cv::Mat& output_matrix, int m, int n, std::string path) {
+
+    //Initialize matrix
     output_matrix = cv::Mat(m,n,CV_64FC1);
 
+    //Open file, then check if opened properly
     std::ifstream fin(path);
     if(!fin){
         std::cout << "Unable to open file";
@@ -80,7 +86,15 @@ void StereoMeasurement::read_m_by_n(cv::Mat& output_matrix, int m, int n, std::s
     fin.close();
 }
 
-
+/**
+ * Reads intrinsic parameter and distortion coefficients stored in txt file.
+ *      txt file must be formatted with first 9 values being the camera matrix, then
+ *      the next 5 as distortion coefficients.
+ *
+ * @param camera_matrix Mat object passed as ref used to return the matrix stored in txt file.
+ * @param distortion_coefficients Mat object passed as ref used to return distortion coefficients.
+ * @param path Path to txt file
+ */
 void StereoMeasurement::read_intrinsics(cv::Mat& camera_matrix, cv::Mat& distortion_coefficients, std::string path){
     std::ifstream fin(path);
 
@@ -112,8 +126,12 @@ void StereoMeasurement::read_intrinsics(cv::Mat& camera_matrix, cv::Mat& distort
     fin.close();
 }
 
-
+/**
+ * Takes photos from stereo camera setup
+ */
 void StereoMeasurement::take_photos() {
+
+    //Assign and open cameras
     cv::VideoCapture left_cam(LEFT_CAM_INDEX);
     cv::VideoCapture right_cam(RIGHT_CAM_INDEX);
 
@@ -121,9 +139,15 @@ void StereoMeasurement::take_photos() {
         std::cout << "Unable to open cameras";
     }
 
+    //Setup proper aspect ratio for each camera
+    left_cam.set(cv::CAP_PROP_FRAME_WIDTH, DESIRED_WIDTH);
+    left_cam.set(cv::CAP_PROP_FRAME_HEIGHT, DESIRED_HEIGHT);
+    right_cam.set(cv::CAP_PROP_FRAME_WIDTH, DESIRED_WIDTH);
+    right_cam.set(cv::CAP_PROP_FRAME_HEIGHT, DESIRED_HEIGHT);
+
+    //Take photos then release the cameras
     left_cam >> left_image_distorted;
     right_cam >> right_image_distorted;
-
     left_cam.release();
     right_cam.release();
 }
