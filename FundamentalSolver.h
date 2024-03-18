@@ -21,6 +21,8 @@ public:
                                                 std::string output_txt_dir);
     std::vector<cv::Point2f> FundamentalSolver::read_corners_from_txt(std::string filepath);
     cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points1);
+
+    void FundamentalSolver::calc_fundamental_2(std::string cam1_pts, std::string cam2_pts, std::string output_txt_dir);
 };
 
 

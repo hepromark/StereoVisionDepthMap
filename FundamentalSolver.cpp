@@ -139,6 +139,19 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
     return T;
 }
 
+void FundamentalSolver::calc_fundamental_2(std::string cam1_pts, std::string cam2_pts, std::string output_txt_dir) {
+    std::vector<cv::Point2f> points1 = read_corners_from_txt(cam1_pts);
+    std::vector<std::vector<cv::Point2f>> p1;
+    p1.push_back(points1);
+    std::vector<cv::Point2f> points2 = read_corners_from_txt(cam2_pts);
+    std::vector<std::vector<cv::Point2f>> p2;
+    p2.push_back(points2);
+
+    cv::Mat F;
+    F = cv::findFundamentalMat(points1, points2, F);
+    std::cout << F << std::endl;
+}
+
 void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts, std::string output_txt_path) {
     std::vector<cv::Point2f> points1 = read_corners_from_txt(cam1_pts);
     std::vector<cv::Point2f> points2 = read_corners_from_txt(cam2_pts);
@@ -214,6 +227,7 @@ void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_
     // Remove the previous transform
     // T_right_cam * F * T_left_cam
     F = T1.t() * F * T2;
+    F = F / F.at<double>(2, 2);
 
     // Output to file
     std::cout << "============" << std::endl;
