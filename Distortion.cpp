@@ -20,6 +20,9 @@ cv::Mat Distortion::correct_distortion(cv::Mat image_distorted, cv::Mat camera_m
     //Pass by ref matix storing process that maps each pixel from distorted to undistorted image
     cv::Mat map1, map2;
 
+
+    //Am not finding new camera matrix here. Results are satisfactory without it. Will experiment
+    //  once project is up and running
     //Calculate distortion maps, then map undistorted image
     cv::initUndistortRectifyMap(camera_matrix,distortion_coefficients,
                                 cv::Mat::eye(3,3, CV_64F), camera_matrix,
