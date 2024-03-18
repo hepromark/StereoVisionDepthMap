@@ -24,20 +24,31 @@ StereoMeasurement::StereoMeasurement() {
 
 void StereoMeasurement::start() {
 
-    //Take photos and undistort
+    //Take photos and undistort them
     take_photos();
-    left_image_undistorted = Distortion::correct_distortion
-            (left_image_distorted,left_cam_intrinsics, left_cam_distortion);
+    cv::imshow("Left image original", left_image_distorted);
+    cv::imshow("Right image original", right_image_distorted);
+
+//    std::cout << left_cam_intrinsics << std::endl << left_cam_distortion << std::endl;
+
+
+
+    left_image_undistorted = Distortion::correct_distortion(
+            left_image_distorted,left_cam_intrinsics, left_cam_distortion);
     right_image_undistorted = Distortion::correct_distortion(
             right_image_distorted, right_cam_intrinsics, right_cam_distortion);
 
-    //Get user to select points
-    left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
-    right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
+    cv::imshow("Left image corrected", left_image_undistorted);
+    cv::imshow("Right image corrected", right_image_undistorted);
 
-    cv::imshow("Left image", left_image_distorted);
-    cv::imshow("Right image", right_image_distorted);
     while(cv::waitKey(1) != 'q'){}
+
+
+//    //Get user to select points
+//    left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
+//    right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
+
+
 
 
     //Take photos
@@ -48,7 +59,7 @@ void StereoMeasurement::start() {
 
 }
 
-void StereoMeasurement::read_intrinsics(cv::Mat camera_matrix, cv::Mat distortion_coefficients, std::string path){
+void StereoMeasurement::read_intrinsics(cv::Mat& camera_matrix, cv::Mat& distortion_coefficients, std::string path){
     std::ifstream fin(path);
 
     camera_matrix = cv::Mat(3,3,CV_64FC1);
@@ -68,13 +79,13 @@ void StereoMeasurement::read_intrinsics(cv::Mat camera_matrix, cv::Mat distortio
         }
     }
 
+    std::cout << "Camera parameters: " << camera_matrix << std::endl;
+
     //Reading camera distortion coefficients
     for(int i = 0; i < 5; i++) {
         fin >> distortion_coefficients.at<double>(i,0);
     }
-
-    std::cout << "Left intrinsics: " << camera_matrix << std::endl <<
-              "Left distortion" << distortion_coefficients << std::endl;
+    std::cout << "Disortion coefficients: " << distortion_coefficients << std::endl;
 
     fin.close();
 }
