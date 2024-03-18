@@ -15,7 +15,10 @@
 
 FundamentalSolver::FundamentalSolver() {}
 
-void FundamentalSolver::manual_match_points(std::string input_image_dir, std::string input_K_dir ,std::string output_txt_file) {
+void FundamentalSolver::manual_match_points(int num_points,
+                                            std::string input_image_dir,
+                                            std::string input_K_dir,
+                                            std::string output_txt_file) {
     std::filesystem::path directory = input_image_dir;
     int cam_idx = 1;
     for (const auto& image : std::filesystem::directory_iterator(directory)) {
@@ -58,7 +61,6 @@ void FundamentalSolver::manual_match_points(std::string input_image_dir, std::st
         std::cout << distortion_coeff << std::endl;
         cv::Mat img = Distortion::correct_distortion(distorted_img, K, distortion_coeff);
 
-        const int num_points = 8;
         std::vector<cv::Point> user_points = PointSelection::getPoints(img, num_points);
 
         for (auto point : user_points) {
@@ -87,6 +89,9 @@ std::vector<cv::Point2f> FundamentalSolver::read_corners_from_txt(std::string fi
 }
 
 cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
+    // Math source:
+    // https://www5.cs.fau.de/fileadmin/lectures/2014s/Lecture.2014s.IMIP/exercises/4/exercise4.pdf
+
     // Get x and y centroids for Point 1
     double x_centroid = 0;
     double y_centroid = 0;
@@ -113,7 +118,7 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
     total_dist = std::pow(total_dist, 0.5);
     std::cout << "Total Distance: " << total_dist << std::endl;
 
-    double scale_factor = total_dist / points.size() * std::pow(2, 0.5);
+    double scale_factor = 1 / (total_dist / points.size() * std::pow(2, 0.5));
     std::cout << "Scale factor: " << scale_factor << std::endl;
 
     // Scale points array
@@ -129,6 +134,7 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
     T.at<double>(1, 2) = -1 * scale_factor * y_centroid;
     T.at<double>(2, 2) = 1;
 
+    std::cout << "Transformation Matrix:" << std::endl;
     std::cout << T << std::endl;
     return T;
 }
@@ -140,6 +146,14 @@ void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_
     // Normalize points and get T
     cv::Mat T1 = normalize_points(points1);
     cv::Mat T2 = normalize_points(points2);
+
+    // Print normalized points
+    std::cout << "=========" << std::endl;
+    std::cout << points1 << std::endl;
+    std::cout << "=========" << std::endl;
+    std::cout << "=========" << std::endl;
+    std::cout << points2 << std::endl;
+    std::cout << "=========" << std::endl;
 
     // Algorithm requires at least 8 points
     const int num_points = points1.size();
@@ -182,7 +196,7 @@ void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_
     // F_hat is the smallest singular value vector, last column in V
     cv::Mat F_hat = Vt.row(Vt.rows - 1);
 
-    // Turn the vector F_hat into (3x3) matrix F
+    // Turn the vector F_hat into (3x3) matrix
     F_hat = F_hat.reshape(1, 3);
     F_hat.convertTo(F_hat, CV_64F);
 
@@ -198,7 +212,8 @@ void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_
     cv::Mat F = U2 * S2 * Vt2;
 
     // Remove the previous transform
-    F = T2.t() * F * T1;
+    // T_right_cam * F * T_left_cam
+    F = T1.t() * F * T2;
 
     // Output to file
     std::cout << "============" << std::endl;

@@ -12,7 +12,8 @@ public:
     FundamentalSolver();
 
 public:
-    void FundamentalSolver::manual_match_points(std::string input_image_dir,
+    void FundamentalSolver::manual_match_points(int num_points,
+                                                std::string input_image_dir,
                                                 std::string input_K_dir,
                                                 std::string output_txt_file);
     void FundamentalSolver::calc_fundamental(std::string cam1_pts,
