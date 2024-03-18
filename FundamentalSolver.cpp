@@ -1,20 +1,23 @@
-
 #include "FundamentalSolver.h"
 
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <opencv2/core.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/calib3d.hpp>
 #include <string>
 #include <cmath>
 
 #include "PointSelection.h"
+#include "Distortion.h"
 
 FundamentalSolver::FundamentalSolver() {}
 
-void FundamentalSolver::manual_match_points(std::string input_image_dir, std::string output_txt_dir) {
+void FundamentalSolver::manual_match_points(std::string input_image_dir, std::string input_K_dir ,std::string output_txt_file) {
     std::filesystem::path directory = input_image_dir;
+    int cam_idx = 1;
     for (const auto& image : std::filesystem::directory_iterator(directory)) {
         std::string raw_filename = image.path().string();
         std::string filename = raw_filename.substr(input_image_dir.size() + 1, raw_filename.size() - 4);
@@ -26,12 +29,34 @@ void FundamentalSolver::manual_match_points(std::string input_image_dir, std::st
             return;
         }
 
-        std::ofstream fout(output_txt_dir + "\\" + filename + ".txt");
+        std::ofstream fout(output_txt_file + "\\" + filename + ".txt");
 
         // Load an image
-        cv::Mat img = cv::imread(
+        cv::Mat distorted_img = cv::imread(
                 raw_filename,
                 cv::IMREAD_GRAYSCALE);
+
+        // Load intrinsic parameters
+        cv::Mat K = cv::Mat(3, 3, CV_64F);
+        std::fstream fin(input_K_dir + "\\K" + std::to_string(cam_idx) + ".txt");
+        std::cout << input_K_dir + "\\K" + std::to_string(cam_idx) + ".txt" << std::endl;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                fin >> K.at<double>(i, j);
+            }
+        }
+
+        cv::Mat distortion_coeff;
+        for (int d = 0; d < 5; d++) {
+            double temp;
+            fin >> temp;
+            distortion_coeff.push_back(temp);
+        }
+
+        // Undistort image before calibrating
+        std::cout << K << std::endl;
+        std::cout << distortion_coeff << std::endl;
+        cv::Mat img = Distortion::correct_distortion(distorted_img, K, distortion_coeff);
 
         const int num_points = 8;
         std::vector<cv::Point> user_points = PointSelection::getPoints(img, num_points);
@@ -40,8 +65,11 @@ void FundamentalSolver::manual_match_points(std::string input_image_dir, std::st
             fout << point.x << " " << point.y << std::endl;
             std::cout << point << std::endl;
         }
-        std::cout << output_txt_dir + "\\" + filename + ".txt" << std::endl;
+        std::cout << output_txt_file + "\\" + filename + ".txt" << std::endl;
         fout.close();
+
+        // Increment cam
+        cam_idx++;
     }
 }
 
