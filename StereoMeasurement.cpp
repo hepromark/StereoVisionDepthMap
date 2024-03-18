@@ -59,6 +59,28 @@ void StereoMeasurement::start() {
 
 }
 
+void StereoMeasurement::read_m_by_n(cv::Mat& output_matrix, int m, int n, std::string path) {
+    output_matrix = cv::Mat(m,n,CV_64FC1);
+
+    std::ifstream fin(path);
+    if(!fin){
+        std::cout << "Unable to open file";
+        return;
+    }
+
+    //Reading from file
+    for(int i = 0; i < m; i++){
+        for(int j = 0; j < n; j++) {
+            double in;
+            fin >> in;
+            output_matrix.at<double>(i, j) = in;
+        }
+    }
+
+    fin.close();
+}
+
+
 void StereoMeasurement::read_intrinsics(cv::Mat& camera_matrix, cv::Mat& distortion_coefficients, std::string path){
     std::ifstream fin(path);
 
