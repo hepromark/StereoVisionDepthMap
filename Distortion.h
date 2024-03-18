@@ -1,9 +1,10 @@
 //
 // Created by aleon on 2024-03-16.
 //
-
+#include "opencv2/core.hpp"
 #ifndef STEREO_VISION_DEPTH_MAP_DISTORTION_H
 #define STEREO_VISION_DEPTH_MAP_DISTORTION_H
+
 
 class Distortion {
 public:
