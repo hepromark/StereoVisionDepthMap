@@ -3,10 +3,9 @@
 #include <cmath>
 #include <iostream>
 
-void solve_camera2(const cv::Mat &fund,const cv::Mat &K1, const cv::Mat &K2, cv::Mat &camera) {
+void solve_camera2(const cv::Mat &fund, const cv::Mat &K1, const cv::Mat &K2, cv::Mat &camera) {
     cv::Mat inter = cv::Mat();
-    cv::multiply(K2.t(),fund,inter);
-    cv::multiply(inter,K1,inter);
+    inter = K2.t() * fund * K1;
     std::cout <<"K1: " <<  K1 << std::endl << "K2: "<< K2 << std::endl;
     std::cout << inter << std::endl;
 
@@ -27,4 +26,13 @@ void solve_camera2(const cv::Mat &fund,const cv::Mat &K1, const cv::Mat &K2, cv:
                          {-1 * std::sin(theta), std::cos(theta),0,-ax *std::sin(theta) - ay * std::cos(theta)},
                          {0,0,1,-az}};
     camera = cv::Mat(3,4,CV_64F,data);
+}
+
+int get_rank(const cv::Mat& mat) {
+    int rank = 0;
+    cv::Mat U, S, Vt;
+    cv::SVDecomp(mat, S, U, Vt);
+    rank = cv::countNonZero(S > 0.0001);
+    std::cout << "RANK: " << rank << std::endl;
+    return rank;
 }

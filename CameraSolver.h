@@ -7,4 +7,5 @@
 
 void solve_camera2(const cv::Mat &fund, const cv::Mat &K1, const cv::Mat &K2, cv::Mat &camera);
 
+int get_rank(const cv::Mat& mat);
 #endif //STEREOVISIONDEPTHMAP_CAMERASOLVER_H
