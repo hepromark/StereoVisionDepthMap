@@ -18,8 +18,8 @@ private:
     const int CAM_INDEX = 0;
     const int POINTS_PER_PHOTO = 2;
     const int DESIRED_WIDTH = 1920, DESIRED_HEIGHT = 1080;
-    const double CUBE_CONST = 3.37 * pow(10,-8),
-                    SQUARE_CONST = -6.39 * pow(10,-5), LINEAR_CONST = 2.13 * pow(10,-1);
+    const double CUBE_CONST = 3.5174 * pow(10,-8),
+                    SQUARE_CONST = -7.4493 * pow(10,-5), LINEAR_CONST = 2.2467 * pow(10,-1);
 
     cv::Mat image;
     std::vector<cv::Point> selected_points;
