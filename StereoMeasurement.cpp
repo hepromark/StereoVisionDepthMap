@@ -24,14 +24,14 @@ StereoMeasurement::StereoMeasurement() {
     //Get intrinsics for each camera
     // K1
     read_intrinsics(left_cam_intrinsics,left_cam_distortion,
-                    "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\K1.txt");
+                    "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K1.txt");
 
     //K2
     read_intrinsics(right_cam_intrinsics,right_cam_distortion,
-                    "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\K2.txt");
+                    "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K2.txt");
 
     // Read fundamental matrix
-    read_m_by_n(fundamental, 3, 3, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_F.txt");
+    read_m_by_n(fundamental, 3, 3, "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\opencv_F.txt");
 
     calculate_M();
 }
@@ -42,12 +42,12 @@ StereoMeasurement::StereoMeasurement() {
 void StereoMeasurement::start() {
 
     //Take photos and undistort them
-//    take_photos();
+    take_photos();
 
     // Temporary no camera testing
-    left_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\hallway1.jpg");
-
-    right_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\hallway2.jpg");
+//    left_image_distorted = cv::imread("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\Fundamental\\imgs\\cam1.jpg");
+//
+//    right_image_distorted = cv::imread("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\Fundamental\\imgs\\cam2.jpg");
 
     left_image_undistorted = Distortion::correct_distortion(
             left_image_distorted,left_cam_intrinsics, left_cam_distortion);
@@ -118,7 +118,7 @@ void StereoMeasurement::calculate_M() {
     std::cout << left_cam_M << std::endl;
 
     // M2 = K[Rt -Rt * T] which is pre-calculated in a .txt
-    read_m_by_n(right_cam_M, 3, 4, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_M'.txt");
+    read_m_by_n(right_cam_M, 3, 4, "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\opencv_M'.txt");
 
     std::cout << "right_cam_M" << std::endl;
     std::cout << right_cam_M << std::endl;
@@ -235,7 +235,7 @@ void StereoMeasurement::k_then_opencv() {
     std::vector<std::vector<cv::Point2f>> cam1_pixels;
     std::vector<std::vector<cv::Point2f>> cam2_pixels;
 
-    intrinsic_solver.get_2d_3d_coords("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\tmp_txt", cam_pixels, world_coords, 24);
+    intrinsic_solver.get_2d_3d_coords("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K1.txt", cam_pixels, world_coords, 24);
     cam1_pixels.push_back(cam_pixels[0]);
     cam2_pixels.push_back(cam_pixels[1]);
     world_coords.pop_back();
@@ -262,7 +262,7 @@ void StereoMeasurement::k_then_opencv() {
     std::cout << F << std::endl;
 
     // Output to file :D
-    std::ofstream fout("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_F.txt");
+    std::ofstream fout("C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\F.txt");
     for (int i =0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j)
             fout << F.at<double>(i,j) << " ";
