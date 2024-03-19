@@ -6,7 +6,9 @@
 #include "Distortion.h"
 #include "PointSelection.h"
 #include "Triangulate.h"
+#include "IntrinsicSolver.h"
 #include <fstream>
+#include "FundamentalSolver.h"
 
 #include "StereoMeasurement.h"
 
@@ -29,7 +31,7 @@ StereoMeasurement::StereoMeasurement() {
                     "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\K2.txt");
 
     // Read fundamental matrix
-    read_m_by_n(fundamental, 3, 3, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\F.txt");
+    read_m_by_n(fundamental, 3, 3, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_F.txt");
 
     calculate_M();
 }
@@ -43,9 +45,9 @@ void StereoMeasurement::start() {
 //    take_photos();
 
     // Temporary no camera testing
-    left_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\cam1.jpg");
+    left_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\hallway1.jpg");
 
-    right_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\cam2.jpg");
+    right_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\hallway2.jpg");
 
     left_image_undistorted = Distortion::correct_distortion(
             left_image_distorted,left_cam_intrinsics, left_cam_distortion);
@@ -112,10 +114,14 @@ void StereoMeasurement::calculate_M() {
             left_cam_M(cv::Rect(0, 0, left_cam_intrinsics.cols, left_cam_intrinsics.rows))
     );
 
+    std::cout << "left_cam_M" << std::endl;
     std::cout << left_cam_M << std::endl;
 
     // M2 = K[Rt -Rt * T] which is pre-calculated in a .txt
-    read_m_by_n(right_cam_M, 3, 4, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\M'.txt");
+    read_m_by_n(right_cam_M, 3, 4, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_M'.txt");
+
+    std::cout << "right_cam_M" << std::endl;
+    std::cout << right_cam_M << std::endl;
 }
 
 /**
@@ -214,4 +220,56 @@ void StereoMeasurement::take_photos() {
     right_cam >> right_image_distorted;
     left_cam.release();
     right_cam.release();
+}
+
+void StereoMeasurement::k_then_opencv() {
+    const cv::Size PATTERN = {7, 2};
+    const double CHESS_SQUARE = 26;  // mm
+    const cv::Size IMAGE_SIZE = {1920, 1080};
+    cv::Mat R, T, E, F;
+
+    IntrinsicSolver intrinsic_solver = IntrinsicSolver(PATTERN, CHESS_SQUARE, IMAGE_SIZE);
+
+    std::vector<std::vector<cv::Point3f>> world_coords;
+    std::vector<std::vector<cv::Point2f>> cam_pixels;
+    std::vector<std::vector<cv::Point2f>> cam1_pixels;
+    std::vector<std::vector<cv::Point2f>> cam2_pixels;
+
+    intrinsic_solver.get_2d_3d_coords("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\tmp_txt", cam_pixels, world_coords, 24);
+    cam1_pixels.push_back(cam_pixels[0]);
+    cam2_pixels.push_back(cam_pixels[1]);
+    world_coords.pop_back();
+
+    cv::stereoCalibrate(world_coords, cam1_pixels, cam2_pixels,
+                        left_cam_intrinsics, left_cam_distortion,
+                        right_cam_intrinsics, right_cam_distortion,
+                        IMAGE_SIZE,
+                        R, T, E, F);
+    std::cout << "K1" << std::endl;
+    std::cout << left_cam_intrinsics << std::endl;
+    std::cout << "==================" << std::endl;
+
+    std::cout << "R" << std::endl;
+    std::cout << R << std::endl;
+    std::cout << "==================" << std::endl;
+    std::cout << "T" << std::endl;
+    std::cout << T << std::endl;
+    std::cout << "==================" << std::endl;
+    std::cout << "E" << std::endl;
+    std::cout << E << std::endl;
+    std::cout << "==================" << std::endl;
+    std::cout << "F" << std::endl;
+    std::cout << F << std::endl;
+
+    // Output to file :D
+    std::ofstream fout("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_F.txt");
+    for (int i =0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j)
+            fout << F.at<double>(i,j) << " ";
+        fout << std::endl;
+    }
+
+    // Get M'
+    FundamentalSolver::solve_camera2(F, left_cam_intrinsics, right_cam_intrinsics, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\opencv_M'.txt",
+                     R, T);
 }

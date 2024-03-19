@@ -114,7 +114,8 @@ std::vector<cv::Point2f> IntrinsicSolver::read_corners_from_txt(std::string file
 
 void IntrinsicSolver::get_2d_3d_coords(std::string txtdir,
                       std::vector<std::vector<cv::Point2f>>& img_coords,
-                      std::vector<std::vector<cv::Point3f>>& world_coords) {
+                      std::vector<std::vector<cv::Point3f>>& world_coords,
+                      int fund) {
 
     std::filesystem::path directory = txtdir;
     int calibration_count = 0;  // tracks how many images have been calibrated so far
@@ -129,9 +130,16 @@ void IntrinsicSolver::get_2d_3d_coords(std::string txtdir,
         // Real world coords into input array
         // Corners go from top left of image to bottom right
         world_coords.push_back({});
-        for (int i = 0; i <= PATTERN.height; i++) {
-            for (int j = 0; j <= PATTERN.width; j++) {
-                world_coords[calibration_count].push_back(cv::Point3f(j * CHESS_SQUARE_DIM, i * CHESS_SQUARE_DIM, 0));
+        if (fund) {
+            for (int i = 0; i < fund; i++) {
+                world_coords[calibration_count].push_back(cv::Point3f(1, 1, 0));
+            }
+        } else {
+            for (int i = 0; i <= PATTERN.height; i++) {
+                for (int j = 0; j <= PATTERN.width; j++) {
+                    world_coords[calibration_count].push_back(
+                            cv::Point3f(j * CHESS_SQUARE_DIM, i * CHESS_SQUARE_DIM, 0));
+                }
             }
         }
         calibration_count++;
@@ -142,7 +150,7 @@ int IntrinsicSolver::calibrate(std::string calibration_txt_dir, std::string matr
     // Get input matrices
     std::vector<std::vector<cv::Point3f>> world_coords;
     std::vector<std::vector<cv::Point2f>> corner_pixel_coords;
-    get_2d_3d_coords(calibration_txt_dir, corner_pixel_coords, world_coords);
+    get_2d_3d_coords(calibration_txt_dir, corner_pixel_coords, world_coords, 0);
 
     // Declare pass by ref output matrices
     cv::Mat cam_matrix;

@@ -17,6 +17,7 @@ public:
 
     static void read_intrinsics(cv::Mat& camera_matrix, cv::Mat& distortion_coefficients, std::string path);
     static void StereoMeasurement::read_m_by_n(cv::Mat& output_matrix, int m, int n, std::string path);
+    void k_then_opencv();
 
 private:
     const int LEFT_CAM_INDEX = 0;

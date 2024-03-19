@@ -25,12 +25,13 @@ public:
     void manual_annotate(std::string image_dir_path, std::string output_txt_path);
     int calibrate(std::string pixel_coords_output_txt, std::string output_matrix_path);
 
-private:
+public:
     // Private Methods
     std::vector<cv::Point2f> read_corners_from_txt(std::string filepath);
     void get_2d_3d_coords(std::string pixel_coords_output_txt,
                           std::vector<std::vector<cv::Point2f>>& img_coords,
-                          std::vector<std::vector<cv::Point3f>>& world_coords);
+                          std::vector<std::vector<cv::Point3f>>& world_coords,
+                          int fund);
 };
 
 

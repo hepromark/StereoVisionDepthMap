@@ -26,7 +26,8 @@ public:
 
     static int FundamentalSolver::get_rank(const cv::Mat& mat);
 
-    static cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, std::string matrix_output_path);
+    static cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, std::string matrix_output_path,
+                                                    cv::Mat R, cv::Mat T);
 
 };
 

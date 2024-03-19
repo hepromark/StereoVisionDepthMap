@@ -139,17 +139,34 @@ cv::Mat FundamentalSolver::normalize_points(std::vector<cv::Point2f>& points) {
     return T;
 }
 
-void FundamentalSolver::calc_fundamental_2(std::string cam1_pts, std::string cam2_pts, std::string output_txt_dir) {
+void FundamentalSolver::calc_fundamental_2(std::string cam1_pts, std::string cam2_pts, std::string output_txt_path) {
     std::vector<cv::Point2f> points1 = read_corners_from_txt(cam1_pts);
-    std::vector<std::vector<cv::Point2f>> p1;
-    p1.push_back(points1);
+//    std::vector<std::vector<cv::Point2f>> p1;
+//    p1.push_back(points1);
     std::vector<cv::Point2f> points2 = read_corners_from_txt(cam2_pts);
-    std::vector<std::vector<cv::Point2f>> p2;
-    p2.push_back(points2);
+//    std::vector<std::vector<cv::Point2f>> p2;
+//    p2.push_back(points2);
+
+    std::cout << points1 << std::endl;
+    std::cout << points2 << std::endl;
 
     cv::Mat F;
     F = cv::findFundamentalMat(points1, points2, F);
+
+    // Output to file
+    std::cout << "============" << std::endl;
+    std::cout << "F" << std::endl;
     std::cout << F << std::endl;
+    std::cout << F.size() << std::endl;
+    std::cout << "============" << std::endl;
+
+    std::ofstream fout(output_txt_path);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            fout << F.at<double>(i, j) << " ";
+        }
+        fout << std::endl;
+    }
 }
 
 void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_pts, std::string output_txt_path) {
@@ -246,53 +263,60 @@ void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_
 }
 
 
-cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, std::string matrix_output_path) {
-    cv::Mat E = K2.t() * fund * K1;
-    std::cout <<"K1: " <<  K1 << std::endl << "K2: "<< K2 << std::endl;
-    std::cout << "E: " << E << std::endl;
+cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, std::string matrix_output_path,
+                                         cv::Mat R, cv::Mat T) {
+//    cv::Mat E = K2.t() * fund * K1;
+//    std::cout <<"K1: " <<  K1 << std::endl << "K2: "<< K2 << std::endl;
+//    std::cout << "E: " << E << std::endl;
+//
+//    //SVD decomposition
+//    cv::SVD decomp = cv::SVD(E);
+//    cv::Mat U = decomp.u;
+//    cv::Mat V = decomp.vt.t();
+//
+//    cv::Mat EEt = E * E.t();
+//    cv::Mat S(3, 3, CV_64F, cv::Scalar(0));
+//    S.at<double>(0, 0) = std::pow(EEt.at<double>(0,0),0.5);
+//    S.at<double>(1, 1) = std::pow(EEt.at<double>(1,1),0.5);
+//    std::cout << "EEt: " << std::endl << EEt << std::endl;
+//    std::cout << "S: " << std::endl << S << std::endl;
+//
+//    cv::Mat W(3, 3, CV_64F, cv::Scalar(0));
+//    W.at<double>(0, 1) = -1;
+//    W.at<double>(1, 0) = 1;
+//    W.at<double>(2, 2) = 1;
+//
+//    cv::Mat R = U * W.t() * V.t();
+//    cv::Mat T = U * W * S * U.t();
+//
+//    std::cout << "Computed rotation:"<< std::endl << R << std::endl;
+//    std::cout << "Computed translation:" << std::endl << T << std::endl;
+//
+//    //digesting translation and rotation matrices
+//    double ax = (std::abs(T.at<double>(0,1)) + std::abs(T.at<double>(1,0)))/2;
+//    double ay = (std::abs(T.at<double>(0,2)) + std::abs(T.at<double>(2,0)))/2;
+//    double az = (std::abs(T.at<double>(2,1)) + std::abs(T.at<double>(1,2)))/2;
 
-    //SVD decomposition
-    cv::SVD decomp = cv::SVD(E);
-    cv::Mat U = decomp.u;
-    cv::Mat V = decomp.vt.t();
-
-    cv::Mat EEt = E * E.t();
-    cv::Mat S(3, 3, CV_64F, cv::Scalar(0));
-    S.at<double>(0, 0) = std::pow(EEt.at<double>(0,0),0.5);
-    S.at<double>(1, 1) = std::pow(EEt.at<double>(1,1),0.5);
-    std::cout << "EEt: " << std::endl << EEt << std::endl;
-    std::cout << "S: " << std::endl << S << std::endl;
-
-    cv::Mat W(3, 3, CV_64F, cv::Scalar(0));
-    W.at<double>(0, 1) = -1;
-    W.at<double>(1, 0) = 1;
-    W.at<double>(2, 2) = 1;
-
-    cv::Mat R = U * W.t() * V.t();
-    cv::Mat T = U * W * S * U.t();
-
-    std::cout << "Computed rotation:"<< std::endl << R << std::endl;
-    std::cout << "Computed translation:" << std::endl << T << std::endl;
-
-    //digesting translation and rotation matrices
-    double ax = (std::abs(T.at<double>(0,1)) + std::abs(T.at<double>(1,0)))/2;
-    double ay = (std::abs(T.at<double>(0,2)) + std::abs(T.at<double>(2,0)))/2;
-    double az = (std::abs(T.at<double>(2,1)) + std::abs(T.at<double>(1,2)))/2;
+    double ax = T.at<double>(0, 0);
+    double ay = T.at<double>(1, 0);
+    double az = T.at<double>(2, 0);
 
     std::cout << "ax: " << ax << std::endl;
     std::cout << "ay: " << ay << std::endl;
     std::cout << "az: " << az << std::endl;
 
+    cv::Mat Rt = R.t();
+
     //building camera matrix
-    double data[3][4] = {{R.at<double>(0,0),R.at<double>(0,1),R.at<double>(0,2), -1 * (ax * R.at<double>(0,0) + ay * R.at<double>(0,1) + az * R.at<double>(0,2))},
-                         {R.at<double>(1,0),R.at<double>(1,1),R.at<double>(1,2), -1 * (ax * R.at<double>(1,0) + ay * R.at<double>(1,1) + az * R.at<double>(1,2))},
-                         {R.at<double>(2,0),R.at<double>(2,1),R.at<double>(2,2), -1 * (ax * R.at<double>(2,0) + ay * R.at<double>(2,1) + az * R.at<double>(2,2))}};
-    cv::Mat camera = cv::Mat(3,4,CV_64F,data);
+    double data[3][4] = {{Rt.at<double>(0,0),Rt.at<double>(0,1),Rt.at<double>(0,2), -1 * (ax * Rt.at<double>(0,0) + ay * Rt.at<double>(0,1) + az * Rt.at<double>(0,2))},
+                         {Rt.at<double>(1,0),Rt.at<double>(1,1),R.at<double>(1,2), -1 * (ax * Rt.at<double>(1,0) + ay * Rt.at<double>(1,1) + az * Rt.at<double>(1,2))},
+                         {Rt.at<double>(2,0),Rt.at<double>(2,1),Rt.at<double>(2,2), -1 * (ax * Rt.at<double>(2,0) + ay * Rt.at<double>(2,1) + az * Rt.at<double>(2,2))}};
+    cv::Mat camera = K2 * cv::Mat(3,4,CV_64F,data);
     std::cout << "M': " << std::endl << camera << std::endl;
 
     std::ofstream fout(matrix_output_path);
     for (int i =0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j)
+        for (int j = 0; j < 4; ++j)
             fout << camera.at<double>(i,j) << " ";
         fout << std::endl;
     }
