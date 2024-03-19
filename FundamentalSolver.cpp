@@ -246,7 +246,7 @@ void FundamentalSolver::calc_fundamental(std::string cam1_pts, std::string cam2_
 }
 
 
-cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, std::string matrix_output_path) {
+void FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat & K2, cv::Mat & camera, std::string matrix_output_path) {
     cv::Mat E = K2.t() * fund * K1;
     std::cout <<"K1: " <<  K1 << std::endl << "K2: "<< K2 << std::endl;
     std::cout << "E: " << E << std::endl;
@@ -287,8 +287,11 @@ cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat
     double data[3][4] = {{R.at<double>(0,0),R.at<double>(0,1),R.at<double>(0,2), -1 * (ax * R.at<double>(0,0) + ay * R.at<double>(0,1) + az * R.at<double>(0,2))},
                          {R.at<double>(1,0),R.at<double>(1,1),R.at<double>(1,2), -1 * (ax * R.at<double>(1,0) + ay * R.at<double>(1,1) + az * R.at<double>(1,2))},
                          {R.at<double>(2,0),R.at<double>(2,1),R.at<double>(2,2), -1 * (ax * R.at<double>(2,0) + ay * R.at<double>(2,1) + az * R.at<double>(2,2))}};
-    cv::Mat camera = cv::Mat(3,4,CV_64F,data);
+    cv::Mat M_prime(3, 4, CV_64F,data);
+    camera = M_prime.clone();
+
     std::cout << "M': " << std::endl << camera << std::endl;
+
 
     std::ofstream fout(matrix_output_path);
     for (int i =0; i < 3; ++i) {
@@ -296,8 +299,6 @@ cv::Mat FundamentalSolver::solve_camera2(cv::Mat & fund,  cv::Mat & K1,  cv::Mat
             fout << camera.at<double>(i,j) << " ";
         fout << std::endl;
     }
-
-    return camera;
 }
 
 int FundamentalSolver::get_rank(const cv::Mat &mat) {
