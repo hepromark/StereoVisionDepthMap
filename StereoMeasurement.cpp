@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "Distortion.h"
 #include "PointSelection.h"
+#include "Triangulate.h"
 #include <fstream>
 
 #include "StereoMeasurement.h"
@@ -19,11 +20,18 @@
  */
 StereoMeasurement::StereoMeasurement() {
     //Get intrinsics for each camera
+    // K1
     read_intrinsics(left_cam_intrinsics,left_cam_distortion,
-                    "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K1.txt");
-    read_intrinsics(right_cam_intrinsics,right_cam_distortion,
-                    "C:\\Users\\aleon\\CLionProjects\\Stereo Vision Depth Map\\Calibration\\K2.txt");
+                    "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\K1.txt");
 
+    //K2
+    read_intrinsics(right_cam_intrinsics,right_cam_distortion,
+                    "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\K2.txt");
+
+    // Read fundamental matrix
+    read_m_by_n(fundamental, 3, 3, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\F.txt");
+
+    calculate_M();
 }
 
 /**
@@ -32,26 +40,61 @@ StereoMeasurement::StereoMeasurement() {
 void StereoMeasurement::start() {
 
     //Take photos and undistort them
-    take_photos();
+//    take_photos();
+
+    // Temporary no camera testing
+    left_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\cam1.jpg");
+
+    right_image_distorted = cv::imread("C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\Fundamental\\imgs\\cam2.jpg");
+
     left_image_undistorted = Distortion::correct_distortion(
             left_image_distorted,left_cam_intrinsics, left_cam_distortion);
     right_image_undistorted = Distortion::correct_distortion(
             right_image_distorted, right_cam_intrinsics, right_cam_distortion);
 
-
     //Get user to select points in undistorted photos
     left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
     right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
+    cv::Mat proj_points_1 = cv::Mat(2, 1, CV_64F);
+    proj_points_1.at<double>(0, 0) = left_points[0].x;
+    proj_points_1.at<double>(1, 0) = left_points[0].y;
 
+    cv::Mat proj_points_2 = cv::Mat(2, 1, CV_64F);
+    proj_points_2.at<double>(0, 0) = right_points[0].x;
+    proj_points_2.at<double>(1, 0) = right_points[0].y;
 
+    std::cout << proj_points_1 << std::endl;
+    std::cout << proj_points_2 << std::endl;
 
-    //Pass corresponding sets of point and get corresponding 3d points
-    //Determine distance between these points
+    std::vector<cv::Point2i> pixel_pair_1 = {cv::Point(left_points[0]), cv::Point(right_points[0])};
+    std::vector<cv::Point2i> pixel_pair_2 = {cv::Point(left_points[1]), cv::Point(right_points[1])};
 
-//    cv::imshow("Left image corrected", left_image_undistorted);
-//    cv::imshow("Right image corrected", right_image_undistorted);
+    // Do Triangulation to get output points
+    cv::Mat P1;
+    cv::triangulatePoints(left_cam_M, right_cam_M, proj_points_1, proj_points_2, P1);
+//    cv::Mat P1 = calc_P(left_cam_M, right_cam_M, pixel_pair_1);
+//    std::cout << "POINT1: " << std::endl;
+//    std::cout << P1 << std::endl;
 //
-//    while(cv::waitKey(1) != 'q'){}
+//    cv::Mat P2 = calc_P(left_cam_M, right_cam_M, pixel_pair_2);
+//    std::cout << "POINT2: " << std::endl;
+//    std::cout << P2 << std::endl;
+//
+//    std::cout << "DISTANCE: " << std::endl;
+//    std::cout << triangulate(P1, P2);
+}
+
+void StereoMeasurement::calculate_M() {
+    // M1 = K[I 0]
+    left_cam_M = cv::Mat::zeros(3, 4, CV_64F);
+    left_cam_intrinsics.copyTo(
+            left_cam_M(cv::Rect(0, 0, left_cam_intrinsics.cols, left_cam_intrinsics.rows))
+    );
+
+    std::cout << left_cam_M << std::endl;
+
+    // M2 = K[Rt -Rt * T] which is pre-calculated in a .txt
+    read_m_by_n(right_cam_M, 3, 4, "C:\\Users\\markd\\Documents\\GitHub\\StereoVisionDepthMap\\Calibration\\M'.txt");
 }
 
 /**

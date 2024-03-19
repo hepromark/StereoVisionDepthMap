@@ -21,7 +21,6 @@ public:
 private:
     const int LEFT_CAM_INDEX = 0;
     const int RIGHT_CAM_INDEX = 2;
-    const int CAM_MATRIX_DIMENSION = 3;
     const int POINTS_PER_PHOTO = 2;
     const int DESIRED_WIDTH = 1920, DESIRED_HEIGHT = 1080;
 
@@ -31,11 +30,17 @@ private:
     //Matricies to store camera parameters
     cv::Mat left_cam_intrinsics, left_cam_distortion, right_cam_intrinsics, right_cam_distortion;
 
+    // Final matrices for triangulation
+    cv::Mat left_cam_M, right_cam_M;
+
+    // Fundamental Matrix
+    cv::Mat fundamental;
+
     //User selected points
     std::vector<cv::Point> left_points, right_points;
 
     void take_photos();
-
+    void calculate_M();
 
 };
 
