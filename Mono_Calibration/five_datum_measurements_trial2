@@ -1,2 +1,2 @@
-Distance between points and datum in pixels. Ground truth increments of 10mm between points and datum at 5mm
-44.0454 94.0213 147.014 194.01 255 310.015 365.012 425.042 480.104 537.093 594.142 653.172 701.257 759.319 817.382 880.511 927.587 981.736 1034.89 1089.06 1139.23 1189.46 1240.55 1286.8 1329.9 1371.16 1420.43 1456.72 1501.07 
+Distance between points and datum in pixels. Ground truth increments of 10mm between points and datum at 105mm
+60.0333 118.038 169.189 233.26 286.505 
