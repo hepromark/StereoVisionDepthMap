@@ -55,23 +55,47 @@ void StereoMeasurement::start() {
     //Get user to select points in undistorted photos
     left_points = PointSelection::getPoints(left_image_undistorted, POINTS_PER_PHOTO);
     right_points = PointSelection::getPoints(right_image_undistorted, POINTS_PER_PHOTO);
-    cv::Mat proj_points_1 = cv::Mat(2, 1, CV_64F);
-    proj_points_1.at<double>(0, 0) = left_points[0].x;
-    proj_points_1.at<double>(1, 0) = left_points[0].y;
 
-    cv::Mat proj_points_2 = cv::Mat(2, 1, CV_64F);
-    proj_points_2.at<double>(0, 0) = right_points[0].x;
-    proj_points_2.at<double>(1, 0) = right_points[0].y;
+    //OPENCV SHIT
+    cv::Mat cam_1_proj_point_1 = cv::Mat(2, 1, CV_64F);
+    cam_1_proj_point_1.at<double>(0, 0) = left_points[0].x;
+    cam_1_proj_point_1.at<double>(1, 0) = left_points[0].y;
 
-    std::cout << proj_points_1 << std::endl;
-    std::cout << proj_points_2 << std::endl;
+    cv::Mat cam_1_proj_point_2 = cv::Mat(2, 1, CV_64F);
+    cam_1_proj_point_2.at<double>(0, 0) = right_points[0].x;
+    cam_1_proj_point_2.at<double>(1, 0) = right_points[0].y;
 
-    std::vector<cv::Point2i> pixel_pair_1 = {cv::Point(left_points[0]), cv::Point(right_points[0])};
-    std::vector<cv::Point2i> pixel_pair_2 = {cv::Point(left_points[1]), cv::Point(right_points[1])};
+    cv::Mat cam_2_proj_point_1 = cv::Mat(2, 1, CV_64F);
+    cam_2_proj_point_1.at<double>(0, 0) = left_points[1].x;
+    cam_2_proj_point_1.at<double>(1, 0) = left_points[1].y;
+
+    cv::Mat cam_2_proj_point_2 = cv::Mat(2, 1, CV_64F);
+    cam_2_proj_point_2.at<double>(0, 0) = right_points[1].x;
+    cam_2_proj_point_2.at<double>(1, 0) = right_points[1].y;
+
+
+    std::cout << cam_1_proj_point_2 << std::endl;
+    std::cout << cam_1_proj_point_2 << std::endl;
+
+//    std::vector<cv::Point2i> pixel_pair_1 = {cv::Point(left_points[0]), cv::Point(right_points[0])};
+//    std::vector<cv::Point2i> pixel_pair_2 = {cv::Point(left_points[1]), cv::Point(right_points[1])};
 
     // Do Triangulation to get output points
     cv::Mat P1;
-    cv::triangulatePoints(left_cam_M, right_cam_M, proj_points_1, proj_points_2, P1);
+    cv::Mat P2;
+    cv::triangulatePoints(left_cam_M, right_cam_M, cam_1_proj_point_1, cam_1_proj_point_2, P1);
+    cv::triangulatePoints(left_cam_M, right_cam_M, cam_2_proj_point_1, cam_2_proj_point_2, P2);
+
+    P1 = P1 / P1.at<double>(3, 0);
+    P2 = P2 / P2.at<double>(3, 0);
+
+    std::cout << P1 << std::endl;
+    std::cout << P2 << std::endl;
+
+    std::cout << "DISTANCE: " << std::endl;
+    std::cout << triangulate(P1, P2);
+
+
 //    cv::Mat P1 = calc_P(left_cam_M, right_cam_M, pixel_pair_1);
 //    std::cout << "POINT1: " << std::endl;
 //    std::cout << P1 << std::endl;
@@ -79,9 +103,6 @@ void StereoMeasurement::start() {
 //    cv::Mat P2 = calc_P(left_cam_M, right_cam_M, pixel_pair_2);
 //    std::cout << "POINT2: " << std::endl;
 //    std::cout << P2 << std::endl;
-//
-//    std::cout << "DISTANCE: " << std::endl;
-//    std::cout << triangulate(P1, P2);
 }
 
 void StereoMeasurement::calculate_M() {
