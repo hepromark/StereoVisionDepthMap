@@ -16,6 +16,8 @@
 #include <fstream>
 #include <iostream>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/opencv.hpp>
 
 MonoMeasurement::MonoMeasurement() {}
 
@@ -25,9 +27,8 @@ double MonoMeasurement::get_distance(cv::Point datum, cv::Point selected_point) 
 
 void MonoMeasurement::calibrate(std::string output_dir, std::string image_path) {
     //Create files and open w/ file streams
-
-    std::ofstream datum_zero_fout(output_dir + "\\zero_datum_measurements_trial2");
-    std::ofstream datum_five_fout(output_dir  + "\\five_datum_measurements_trial2");
+    std::ofstream datum_zero_fout(output_dir + "\\zero_datum_measurements_trial3");
+    std::ofstream datum_five_fout(output_dir  + "\\zero_datum_measurements_trial4");
     cv::Mat calibration_image = cv::imread(image_path);
 
     if(!datum_five_fout || !datum_zero_fout || calibration_image.empty()) {
@@ -37,8 +38,8 @@ void MonoMeasurement::calibrate(std::string output_dir, std::string image_path) 
 
     datum_zero_fout << "Distance between points and datum in pixels."
                        " Ground truth increments of 10mm between points and datum at 0mm."<< std::endl;
-    datum_five_fout << "Distance between points and datum in pixels."
-                       " Ground truth increments of 10mm between points and datum at 5mm"<< std::endl;
+    datum_five_fout << "2nd Trial of measuring distance between points and datum in pixels."
+                       " Ground truth increments of 10mm between points and datum at 0mm"<< std::endl;
 
     //Get all Points (+1 for datum)
     std::vector<cv::Point> zero_datum_points = PointSelection::getPoints(calibration_image, NUM_POINTS+1);
@@ -63,4 +64,34 @@ void MonoMeasurement::calibrate(std::string output_dir, std::string image_path) 
     datum_zero_fout.close();
     datum_five_fout.close();
 
+}
+
+double MonoMeasurement::measure() {
+    take_photo();
+    selected_points = PointSelection::getPoints(image,POINTS_PER_PHOTO);
+    return get_distance(selected_points[0], selected_points[1]);
+}
+
+double MonoMeasurement::convert_pix_to_mm(double pixel_dist) {
+    return ( CUBE_CONST * pow(pixel_dist,3) +
+                SQUARE_CONST * pow(pixel_dist,2) +
+                LINEAR_CONST * pixel_dist);
+}
+
+void MonoMeasurement::take_photo() {
+    //Assign and open cameras
+    cv::VideoCapture camera(CAM_INDEX);
+
+    if(!camera.isOpened()) {
+        std::cout << "Unable to open camera";
+    }
+
+    //Setup proper aspect ratio for each camera
+    camera.set(cv::CAP_PROP_FRAME_WIDTH, DESIRED_WIDTH);
+    camera.set(cv::CAP_PROP_FRAME_HEIGHT, DESIRED_HEIGHT);
+
+    //Take photos then release the cameras
+    camera >> image;
+
+    camera.release();
 }
