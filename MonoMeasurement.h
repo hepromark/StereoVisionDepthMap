@@ -12,8 +12,8 @@ public:
     void calibrate(std::string output_dir, std::string image_path);
 
 private:
-    const int NUM_POINTS = 29;
-    double get_distance(cv::Point datum, cv::Point selected_point);
+    const int NUM_POINTS = 30;
+    static double get_distance(cv::Point datum, cv::Point selected_point);
 
 
 

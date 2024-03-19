@@ -22,7 +22,6 @@ void PointSelection::mouse_handler(int event, int x, int y, int flags, void* poi
     if (event == cv::EVENT_LBUTTONDOWN) {
         //Access point data by casting generic reference into specific type
         std::vector<cv::Point>* points = (std::vector<cv::Point>*) (pointData);
-
         //Save user selected points
         points->push_back(cv::Point(x, y));
     }
@@ -46,7 +45,8 @@ std::vector<cv::Point> PointSelection::getPoints(cv::Mat image, const int NUM_PO
     std::vector<cv::Point> points;
 
     //Create window
-    cv::namedWindow("Select Points");
+    //My monitor is not large enough to display photos at originial size - will do all calibration and running on mine
+    cv::namedWindow("Select Points", cv::WINDOW_KEEPRATIO);
 
     // Set mouse callback function
     cv::setMouseCallback("Select Points", PointSelection::mouse_handler, &points);
@@ -56,6 +56,8 @@ std::vector<cv::Point> PointSelection::getPoints(cv::Mat image, const int NUM_PO
 
     // Wait until all points are selected or user closes the window
     while (cv::waitKey(1) != 'q' && points.size() < NUM_POINTS) {}
+
+    cv::destroyWindow("Select Points");
 
     return points;
 }
