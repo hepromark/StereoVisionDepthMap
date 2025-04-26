@@ -1,6 +1,3 @@
-//
-// Created by Humperdink2 on 2024-03-16.
-//
 #include <opencv2/core/core.hpp>
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -18,7 +15,6 @@
  * @param pointData vector of points passed by ref used to store the points selected by user in each photo.
  */
 void PointSelection::mouse_handler(int event, int x, int y, int flags, void* pointData) {
-
     if (event == cv::EVENT_LBUTTONDOWN) {
         //Access point data by casting generic reference into specific type
         std::vector<cv::Point>* points = (std::vector<cv::Point>*) (pointData);
